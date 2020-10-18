@@ -126,56 +126,58 @@ void I2C_Init(I2C_handle_t *pI2CHandle)
 {
 
 	uint32_t tempreg = 0;
+	uint32_t pclk1;
 
-	// ACK control bit
-	pI2CHandle->pI2Cx->CR1 |= (pI2CHandle->I2C_Config.I2C_ACKControl << I2C_CR1_ACK);
+	pclk1 = RCC_GetPCLK1Value();
 
+	/* I2C_CR1 */
+	// ACK control bit in CR1
+	tempreg |= (pI2CHandle->I2C_Config.I2C_ACKControl << I2C_CR1_ACK);
+	pI2CHandle->pI2Cx->CR1 = tempreg;
 
-	////////////////////////////////////////////
-	/* Disable peripheral */
+	/* I2C_CR2 */
+	// FREQ in CR2
+	tempreg = pclk1/1000000U;
+	pI2CHandle->pI2Cx->CR2 = (tempreg & 0x3f);
 
+	/* I2C_OAR1 */
+	// Address
+	tempreg = 0;
+	tempreg |= (1 << 14); // This bit must be kept at 1 by software
+	if(pI2CHandle->I2C_Config.I2C_DeviceAddress > 0x7f){
+		// 10-bit address
+		tempreg |= (1 << I2C_OAR1_ADDMODE); // set 10-bit slave address bit
+		tempreg |= (0x3f & pI2CHandle->I2C_Config.I2C_DeviceAddress);
+	}else{
+		// 7-bit address
+		tempreg &= ~(1 << I2C_OAR1_ADDMODE); // clear 10-bit slave address bit
+		tempreg |= (0x7f & pI2CHandle->I2C_Config.I2C_DeviceAddress) << 1;
+	}
+
+	/* I2C_OAR2 */
+	// Dual address not supported
+
+	/* I2C_CCR */
+	tempreg = 0;
 	/* Speed */
 	if(pI2CHandle->I2C_Config.I2C_SCLSpeed > I2C_SCL_SPEED_SM){
 		// Fast Mode
-		pI2CHandle->pI2Cx->CCR = 0; // reset register
-		pI2CHandle->pI2Cx->CCR |= (1 << I2C_CCR_FS); // set fast mode bit
+		tempreg |= (1 << I2C_CCR_FS); // set fast mode bit
+		tempreg |= pI2CHandle->I2C_Config.I2C_FMDutyCycle << I2C_CCR_DUTY;
 
 		if(pI2CHandle->I2C_Config.I2C_FMDutyCycle == I2C_FM_DUTY_2){
-			pI2CHandle->pI2Cx->CCR &= ~(1 << I2C_CCR_DUTY); // clear duty bit
-			pI2CHandle->pI2Cx->CCR |= (0x0fff & (8000000/(3*pI2CHandle->I2C_Config.I2C_SCLSpeed)));
+			tempreg |= ((pclk1/(3*pI2CHandle->I2C_Config.I2C_SCLSpeed)) & 0x0fff);
 
 		}else if(pI2CHandle->I2C_Config.I2C_FMDutyCycle == I2C_FM_DUTY_19_9){
-			pI2CHandle->pI2Cx->CCR |= (1 << I2C_CCR_DUTY); // set duty bit
-			pI2CHandle->pI2Cx->CCR |= (0x0fff & (8000000/(25*pI2CHandle->I2C_Config.I2C_SCLSpeed)));
+			tempreg |= ((pclk1/(25*pI2CHandle->I2C_Config.I2C_SCLSpeed)) & 0x0fff);
 		}
 	}else{
 		// Standard mode
-		pI2CHandle->pI2Cx->CCR = 0; // reset register
-		pI2CHandle->pI2Cx->CCR &= ~(1 << I2C_CCR_FS); // clear fast mode bit
+		tempreg &= ~(1 << I2C_CCR_FS); // clear fast mode bit
+		tempreg |= ((pclk1/(2*pI2CHandle->I2C_Config.I2C_SCLSpeed)) & 0x0fff);
+	}
+	pI2CHandle->pI2Cx->CCR = tempreg;
 
-		pI2CHandle->pI2Cx->CCR |= (0x0fff & (8000000/(2*pI2CHandle->I2C_Config.I2C_SCLSpeed)));
-	}
-
-	/* Address */
-	if(pI2CHandle->I2C_Config.I2C_DeviceAddress > 0x7f){
-		// 10-bit address
-		pI2CHandle->pI2Cx->OAR1 = 0x0000; // reset register
-		pI2CHandle->pI2Cx->OAR1 |= (1 << I2C_OAR1_ADDMODE); // set 10-bit slave address bit
-		pI2CHandle->pI2Cx->OAR1 |= (0x3f & pI2CHandle->I2C_Config.I2C_DeviceAddress);
-		pI2CHandle->pI2Cx->OAR1 |= (1 << 14); // kept at 1 by software
-	}else{
-		// 7-bit address
-		pI2CHandle->pI2Cx->OAR1 = 0x0000; // reset register
-		pI2CHandle->pI2Cx->OAR1 &= ~(1 << I2C_OAR1_ADDMODE); // clear 10-bit slave address bit
-		pI2CHandle->pI2Cx->OAR1 |= (0x80 & pI2CHandle->I2C_Config.I2C_DeviceAddress) << 1;
-		pI2CHandle->pI2Cx->OAR1 |= (1 << 14); // kept at 1 by software
-	}
-	/* ACK */
-	if(pI2CHandle->I2C_Config.I2C_ACKControl == I2C_ACK_ENABLE){
-		pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_ACK);
-	}else if(pI2CHandle->I2C_Config.I2C_ACKControl == I2C_ACK_DISABLE){
-		pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_ACK);
-	}
 
 	/* Enable peripheral */
 
