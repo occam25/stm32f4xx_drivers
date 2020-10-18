@@ -8,9 +8,14 @@
 #ifndef INC_STM32F407XX_H_
 #define INC_STM32F407XX_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define __vo 	volatile
+#define __weak __attribute__((weak))
+
+#define HSI_FREQ		16000000  /* Internal oscillator */
+#define HSE_FREQ		 8000000  /* Depends on the oscillator installed on the board */
 
 /********************************** Processor Specific Details ****************************************************/
 /*
@@ -49,6 +54,7 @@
 
 #define GPIO_PIN_SET	SET
 #define GPIO_PIN_RESET	RESET
+
 
 /*
  * Base addresses of flash and SRAM memories
@@ -112,7 +118,6 @@
 #define USART6_BASEADDR			(APB1PERIPH_BASEADDR + 0x1400)
 
 #define SPI1_BASEADDR			(APB1PERIPH_BASEADDR + 0x3000)
-#define SPI4_BASEADDR			(APB1PERIPH_BASEADDR + 0x3400)
 
 #define SYSCFG_BASEADDR			(APB2PERIPH_BASEADDR + 0x3800)
 
@@ -199,6 +204,31 @@ typedef struct {
 	__vo uint32_t CMPCR;		/*!< SYSCFG Compensation cell control register. 			Address offset: 0x20 >*/
 }SYSCFG_RegDef_t;
 
+typedef struct {
+	__vo uint32_t CR1;			/*!< SPI control register 1 (not used in I2S mode). 			Address offset: 0x00 >*/
+	__vo uint32_t CR2;			/*!< SPI control register 2. 									Address offset: 0x04 >*/
+	__vo uint32_t SR;			/*!< SPI status register. 										Address offset: 0x08 >*/
+	__vo uint32_t DR;			/*!< SPI data register. 										Address offset: 0x0C >*/
+	__vo uint32_t CRCPR;		/*!< SPI CRC polynomial register (not used in I2S mode).		Address offset: 0x10 >*/
+	__vo uint32_t RXCRCR;		/*!< SPI RX CRC register (not used in I2S mode). 				Address offset: 0x14 >*/
+	__vo uint32_t TXCRCR;		/*!< SPI TX CRC register (not used in I2S mode). 				Address offset: 0x18 >*/
+	__vo uint32_t I2SCFGR;		/*!< SPI_I2S configuration register. 							Address offset: 0x1C >*/
+	__vo uint32_t I2SPR;		/*!< SPI_I2S prescaler register. 								Address offset: 0x20 >*/
+}SPI_RegDef_t;
+
+typedef struct {
+	__vo uint32_t CR1;			/*!< I2C control register 1.						 			Address offset: 0x00 >*/
+	__vo uint32_t CR2;			/*!< I2C control register 2. 									Address offset: 0x04 >*/
+	__vo uint32_t OAR1;			/*!< I2C own address register 1.								Address offset: 0x08 >*/
+	__vo uint32_t OAR2;			/*!< I2C own address register 2.								Address offset: 0x0C >*/
+	__vo uint32_t DR;			/*!< I2C data register.											Address offset: 0x10 >*/
+	__vo uint32_t SR1;			/*!< I2C status register 1.						 				Address offset: 0x14 >*/
+	__vo uint32_t SR2;			/*!< I2C status register 2. 									Address offset: 0x18 >*/
+	__vo uint32_t CCR;			/*!< I2C clock control register. 								Address offset: 0x1C >*/
+	__vo uint32_t TRISE;		/*!< I2C TRISE register.	 									Address offset: 0x20 >*/
+	__vo uint32_t FLTR;			/*!< I2C FLTR register. 	 									Address offset: 0x24 >*/
+}I2C_RegDef_t;
+
 /*
  *  Peripheral definitions (Peripheral base address typecasted to xxx_RegDef_t)
  */
@@ -219,7 +249,13 @@ typedef struct {
 
 #define SYSCFG			((SYSCFG_RegDef_t *)SYSCFG_BASEADDR)
 
+#define SPI1			((SPI_RegDef_t *)SPI1_BASEADDR)
+#define SPI2			((SPI_RegDef_t *)SPI2_BASEADDR)
+#define SPI3			((SPI_RegDef_t *)SPI3_BASEADDR)
 
+#define I2C1			((I2C_RegDef_t *)I2C1_BASEADDR)
+#define I2C2			((I2C_RegDef_t *)I2C2_BASEADDR)
+#define I2C3			((I2C_RegDef_t *)I2C3_BASEADDR)
 
 /*
  * GPIO port numbers enum
@@ -375,11 +411,25 @@ typedef enum {
 #define I2C3_PCLK_DI()		(RCC->APB1ENR &= ~(1 << 23))
 
 /*
+ * Reset Macros for I2Cx peripherals
+ */
+#define I2C1_RST()			do{ RCC->APB1RSTR |= (1 << 21); RCC->APB1RSTR &= ~(1 << 21); }while(0)
+#define I2C2_RST()			do{ RCC->APB1RSTR |= (1 << 22); RCC->APB1RSTR &= ~(1 << 22); }while(0)
+#define I2C3_RST()			do{ RCC->APB1RSTR |= (1 << 23); RCC->APB1RSTR &= ~(1 << 23); }while(0)
+
+/*
  * Clock Disable Macros for SPIx peripherals
  */
 #define SPI1_PCLK_DI()		(RCC->APB2ENR &= ~(1 << 12))
 #define SPI2_PCLK_DI()		(RCC->APB1ENR &= ~(1 << 14))
 #define SPI3_PCLK_DI()		(RCC->APB1ENR &= ~(1 << 15))
+
+/*
+ * Reset Macros for SPIx peripherals
+ */
+#define SPI1_RST()			do{ RCC->APB2RSTR |= (1 << 12); RCC->APB2RSTR &= ~(1 << 12); }while(0)
+#define SPI2_RST()			do{ RCC->APB1RSTR |= (1 << 14); RCC->APB1RSTR &= ~(1 << 14); }while(0)
+#define SPI3_RST()			do{ RCC->APB1RSTR |= (1 << 15); RCC->APB1RSTR &= ~(1 << 15); }while(0)
 
 /*
  * Clock Disable Macros for USARTx peripherals
@@ -464,6 +514,17 @@ typedef enum {
 #define IRQ_EXTI9_5				23
 #define IRQ_EXTI15_10			40
 
+#define IRQ_SPI1				35
+#define IRQ_SPI2				36
+#define IRQ_SPI3				51
+
+#define IRQ_I2C1_EV				31
+#define IRQ_I2C1_ER				32
+#define IRQ_I2C2_EV				33
+#define IRQ_I2C2_ER				34
+#define IRQ_I2C3_EV				72
+#define IRQ_I2C3_ER				73
+
 /*
  *  IRQ priority levels
  */
@@ -488,5 +549,106 @@ typedef enum {
 #define NVIC_IRQ_PRIO18			18
 #define NVIC_IRQ_PRIO19			19
 #define NVIC_IRQ_PRIO20			20
+
+
+/*
+ *  Bit position definitions for SPI peripheral
+ */
+#define SPI_CR1_CPHA			 0
+#define SPI_CR1_CPOL			 1
+#define SPI_CR1_MSTR			 2
+#define SPI_CR1_BR				 3
+#define SPI_CR1_SPE				 6
+#define SPI_CR1_LSB_FIRST		 7
+#define SPI_CR1_SSI				 8
+#define SPI_CR1_SSM				 9
+#define SPI_CR1_RXONLY			10
+#define SPI_CR1_DFF				11
+#define SPI_CR1_CRCNEXT			12
+#define SPI_CR1_CRCEN			13
+#define SPI_CR1_BIDIOE			14
+#define SPI_CR1_BIDIMODE		15
+
+#define SPI_CR2_RXDMAEN			 0
+#define SPI_CR2_TXDMAEN			 1
+#define SPI_CR2_SSOE			 2
+#define SPI_CR2_FRF				 4
+#define SPI_CR2_ERRIE			 5
+#define SPI_CR2_RXNEIE			 6
+#define SPI_CR2_TXEIE			 7
+
+#define SPI_SR_RXNE				 0
+#define SPI_SR_TXE				 1
+#define SPI_SR_CHSIDE			 2
+#define SPI_SR_UDR				 3
+#define SPI_SR_CRCERR			 4
+#define SPI_SR_MODF				 5
+#define SPI_SR_OVR				 6
+#define SPI_SR_BSY				 7
+#define SPI_SR_FRE				 8
+
+/*
+ *  Bit position definitions for I2C peripheral
+ */
+#define I2C_CR1_PE		 		 0
+#define I2C_CR1_SMBUS	  		 1
+#define I2C_CR1_SMBTYPE			 3
+#define I2C_CR1_ENARP			 4
+#define I2C_CR1_ENPEC			 5
+#define I2C_CR1_ENGC			 6
+#define I2C_CR1_NOSTRETCH		 7
+#define I2C_CR1_START			 8
+#define I2C_CR1_STOP			 9
+#define I2C_CR1_ACK				10
+#define I2C_CR1_POS				11
+#define I2C_CR1_PEC				12
+#define I2C_CR1_ALERT			13
+#define I2C_CR1_SWRST			15
+
+#define I2C_CR2_FREQ	 		 0
+#define I2C_CR2_ITERREN	  		 8
+#define I2C_CR2_ITEVTEN			 9
+#define I2C_CR2_ITBUFEN			10
+#define I2C_CR2_DMAEN			11
+#define I2C_CR2_LAST			12
+
+#define I2C_OAR1_ADD0	 		 0
+#define I2C_OAR1_ADD7_1		  	 1
+#define I2C_OAR1_ADD9_8			 8
+#define I2C_OAR1_ADDMODE		15
+
+#define I2C_OAR2_ENDUAL	 		 0
+#define I2C_OAR2_ADD2		  	 1
+
+#define I2C_SR1_SB		 		 0
+#define I2C_SR1_ADDR	  		 1
+#define I2C_SR1_BTF				 2
+#define I2C_SR1_ADD10			 3
+#define I2C_SR1_STOPF			 4
+#define I2C_SR1_RXNE			 6
+#define I2C_SR1_TXE				 7
+#define I2C_SR1_BERR			 8
+#define I2C_SR1_ARLO			 9
+#define I2C_SR1_AF				10
+#define I2C_SR1_OVR				11
+#define I2C_SR1_PECERR			12
+#define I2C_SR1_TIMEOUT			14
+#define I2C_SR1_SMBALERT		15
+
+#define I2C_SR2_MSL		 		 0
+#define I2C_SR2_BUSY	  		 1
+#define I2C_SR2_TRA				 2
+#define I2C_SR2_GENCALL			 4
+#define I2C_SR2_SMBDEFAULT		 5
+#define I2C_SR2_SMBHOST			 6
+#define I2C_SR2_DUALF			 7
+#define I2C_SR2_PEC				 8
+
+#define I2C_CCR_CCR		 		 0
+#define I2C_CCR_DUTY	  		14
+#define I2C_CCR_FS				15
+
+#define I2C_FLTR_DNF	 		 0
+#define I2C_FLTR_ANOFF	  		 4
 
 #endif /* INC_STM32F407XX_H_ */

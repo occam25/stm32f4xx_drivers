@@ -53,8 +53,12 @@ void GPIO_ClockControl(GPIO_port_t GPIOx_port, uint8_t status)
  */
 void GPIO_Init(GPIO_handle_t *pGPIOHandle)
 {
+
 	// 0. Set the GPIO port number
 	pGPIOHandle->GPIOx_port = GPIO_BASEADDR_TO_CODE(pGPIOHandle->pGPIOx);
+
+	// Enable the peripheral clock
+	GPIO_ClockControl(pGPIOHandle->GPIOx_port, ENABLE);
 
 	// 1. Configure mode
 	if(pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG){
