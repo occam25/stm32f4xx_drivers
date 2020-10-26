@@ -82,8 +82,8 @@ typedef struct {
 #define I2C_WRITE	0
 #define I2C_READ	1
 
-#define I2C_NO_SR	0
-#define I2C_SR		1
+#define I2C_DISABLE_SR		0
+#define I2C_ENABLE_SR		1
 /*********************************************************************************************
  * 							APIs supported by this driver
  * 		For more information about the APIs check the function definitions

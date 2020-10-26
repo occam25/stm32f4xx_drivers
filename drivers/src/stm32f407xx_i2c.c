@@ -341,6 +341,7 @@ void I2C_DeInit(I2C_RegDef_t *pI2Cx)
  * @param[in]		- Tx buffer with the data to send
  * @param[in]		- Length of Tx buffer
  * @param[in]		- Slave address
+ * @param[in]		- Flag to use or not START repetition
  *
  * @return			- none
  *
@@ -382,7 +383,7 @@ void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t l
 
 	// 8. Generate STOP condition and master need not to wait for the completion of STOP condition
 	// Note: generating STOP, automatically clears the BTF
-	if(start_repetition == I2C_NO_SR)
+	if(start_repetition == I2C_DISABLE_SR)
 		I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 }
 
@@ -395,6 +396,7 @@ void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t l
  * @param[in]		- Rx buffer to hold received bytes
  * @param[in]		- Length of Rx buffer
  * @param[in]		- Slave address
+ * @param[in]		- Flag to use or not START repetition
  *
  * @return			- none
  *
@@ -432,7 +434,7 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
 		while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_RXNE_FLAG, pI2CHandle->pI2Cx->SR1));
 
 		// 4. Generate STOP condition
-		if(start_repetition == I2C_NO_SR)
+		if(start_repetition == I2C_DISABLE_SR)
 			I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 
 		// 5. Read data into buffer
@@ -454,7 +456,7 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
 				I2C_ACKingControl(pI2CHandle->pI2Cx, DISABLE);
 
 				// Generate STOP condition
-				if(start_repetition == I2C_NO_SR)
+				if(start_repetition == I2C_DISABLE_SR)
 					I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 			}
 
