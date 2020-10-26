@@ -248,6 +248,8 @@ void I2C_Init(I2C_handle_t *pI2CHandle)
 
 	/* I2C_CR1 */
 	// ACK control bit in CR1
+	/* Note: ACK bit in CR1 register will not be set if the peripheral is disabled (PE = 0)
+	 * but it is ok because in the enabling API the ACKing configuration will be set again */
 	tempreg |= (pI2CHandle->I2C_Config.I2C_ACKControl << I2C_CR1_ACK);
 	pI2CHandle->pI2Cx->CR1 = tempreg;
 
@@ -471,7 +473,7 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
  *
  * @brief			- This function enables or disables the I2C peripheral
  *
- * @param[in]		- Base address of the I2C peripheral
+ * @param[in]		- I2Cx handle containing the I2Cx base address and the I2C configuration
  * @param[in]		- ENABLE or DISABLE
  *
  * @return			- none
@@ -479,12 +481,16 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
  * @Note			- none
  *
  */
-void I2C_PeripheralControl(I2C_RegDef_t *pI2Cx, uint8_t status)
+void I2C_PeripheralControl(I2C_handle_t *pI2CHandle, uint8_t status)
 {
 	if(status == ENABLE){
-		pI2Cx->CR1 |= (1 << I2C_CR1_PE);
+		pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_PE);
+		/* Note: if the ACKing was enabled with the peripheral disabled (PE = 0)
+		 * the ACK bit in CR1 was not set properly, so do it here again */
+		if(pI2CHandle->I2C_Config.I2C_ACKControl == ENABLE)
+			I2C_ACKingControl(pI2CHandle->pI2Cx, ENABLE);
 	}else{
-		pI2Cx->CR1 &= ~(1 << I2C_CR1_PE);
+		pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_PE);
 	}
 }
 

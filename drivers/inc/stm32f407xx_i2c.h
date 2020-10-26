@@ -114,7 +114,7 @@ void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
 /*
  * Other peripheral control APIs
  */
-void I2C_PeripheralControl(I2C_RegDef_t *pI2Cx, uint8_t status);
+void I2C_PeripheralControl(I2C_handle_t *pI2CHandle, uint8_t status);
 uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint8_t flag, uint32_t SR);
 
 

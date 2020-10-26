@@ -111,7 +111,7 @@ int main(void)
 
 	HW_setup();
 
-	I2C_PeripheralControl(I2C1, ENABLE);
+	I2C_PeripheralControl(&i2c_handle, ENABLE);
 
 	printf("Initialized\n");
 
@@ -125,6 +125,9 @@ int main(void)
 
 		// 2. Read arduino's data len
 		I2C_MasterReceiveData(&i2c_handle, &data_len, 1, ARDUINO_I2C_ADDR);
+
+		if(data_len > (sizeof(data) - 1))
+			data_len = sizeof(data) - 1;
 
 		// 3. Send I2C_READ_DATA_CMD command
 		cmd = I2C_READ_DATA_CMD;
