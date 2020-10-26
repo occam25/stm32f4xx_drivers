@@ -1,0 +1,20 @@
+
+
+USING SEMIHOSTING
+=====================
+
+1. Linker argument settings (MCU GCC Linker -> Miscellaneous -> Linker flags)
+-specs=rdimon.specs -lc -lrdimon
+
+2. Debug configuration of your application. Copy the following command in debug configurations -> startup ->Run commands
+monitor arm semihosting enable
+
+3. In main.c use below codes:
+
+extern void initialise_monitor_handles();
+initialise_monitor_handles();
+
+4. Select openOCD debugger
+
+Print messages as usual:
+printf("Waiting for the button to be pressed\n");
