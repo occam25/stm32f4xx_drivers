@@ -82,6 +82,8 @@ typedef struct {
 #define I2C_WRITE	0
 #define I2C_READ	1
 
+#define I2C_NO_SR	0
+#define I2C_SR		1
 /*********************************************************************************************
  * 							APIs supported by this driver
  * 		For more information about the APIs check the function definitions
@@ -101,8 +103,8 @@ void I2C_DeInit(I2C_RegDef_t *pI2Cx);
 /*
  *  Data send and receive
  */
-void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t slaveAddr);
-void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t len, uint8_t slaveAddr);
+void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t slaveAddr, uint8_t start_repetition);
+void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t len, uint8_t slaveAddr, uint8_t start_repetition);
 
 /*
  * IRQ configuration and ISR handling

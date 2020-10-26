@@ -347,7 +347,7 @@ void I2C_DeInit(I2C_RegDef_t *pI2Cx)
  * @Note			- none
  *
  */
-void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t slaveAddr)
+void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t len, uint8_t slaveAddr, uint8_t start_repetition)
 {
 	// 1. Generate START
 	I2C_GenerateStartCondition(pI2CHandle->pI2Cx);
@@ -382,7 +382,8 @@ void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t l
 
 	// 8. Generate STOP condition and master need not to wait for the completion of STOP condition
 	// Note: generating STOP, automatically clears the BTF
-	I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
+	if(start_repetition == I2C_NO_SR)
+		I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 }
 
 /******************************************************************************
@@ -400,7 +401,7 @@ void I2C_MasterSendData(I2C_handle_t *pI2CHandle, uint8_t *pTxBuffer, uint32_t l
  * @Note			- none
  *
  */
-void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t len, uint8_t slaveAddr)
+void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_t len, uint8_t slaveAddr, uint8_t start_repetition)
 {
 	// TODO
 	if(len == 0)
@@ -431,7 +432,8 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
 		while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_RXNE_FLAG, pI2CHandle->pI2Cx->SR1));
 
 		// 4. Generate STOP condition
-		I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
+		if(start_repetition == I2C_NO_SR)
+			I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 
 		// 5. Read data into buffer
 		*pRxBuffer = pI2CHandle->pI2Cx->DR;
@@ -452,7 +454,8 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
 				I2C_ACKingControl(pI2CHandle->pI2Cx, DISABLE);
 
 				// Generate STOP condition
-				I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
+				if(start_repetition == I2C_NO_SR)
+					I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 			}
 
 			// Read data register into buffer
