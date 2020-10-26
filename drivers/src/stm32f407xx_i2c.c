@@ -9,6 +9,27 @@
 
 
 /******************************************************************************
+ * @fn 				- I2C_ACKingControl
+ *
+ * @brief			- This function controls the ACKing in the I2C peripheral
+ *
+ * @param[in]		- Base address of the I2C peripheral
+ * @param[in]		- ACK status (ENABLE or DISABLE)
+ *
+ * @return			- none
+ *
+ * @Note			- none
+ *
+ */
+static void I2C_ACKingControl(I2C_RegDef_t *pI2Cx, uint8_t status)
+{
+	if(status == ENABLE)
+		pI2Cx->CR1 |= (1 << I2C_CR1_ACK);
+	else
+		pI2Cx->CR1 &= ~(1 << I2C_CR1_ACK);
+}
+
+/******************************************************************************
  * @fn 				- I2C_GenerateStartCondition
  *
  * @brief			- This function generates a start condition in the I2C peripheral
@@ -398,39 +419,51 @@ void I2C_MasterReceiveData(I2C_handle_t *pI2CHandle, uint8_t *pRxBuffer, uint32_
 
 	if(len == 1){
 		// Procedure to read only 1 byte from slave
-
 		// 1. Disable ACKing
+		I2C_ACKingControl(pI2CHandle->pI2Cx, DISABLE);
 
 		// 2. Clear the ADDR flag
+		I2C_ClearADDRFlag(pI2CHandle->pI2Cx);
 
 		// 3. Wait until RXNE is set
+		while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_RXNE_FLAG, pI2CHandle->pI2Cx->SR1));
 
 		// 4. Generate STOP condition
+		I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 
 		// 5. Read data into buffer
+		*pRxBuffer = pI2CHandle->pI2Cx->DR;
 
 	}else{
 		// Procedure to read more than 1 byte from slave
 		// 1. Clear the ADDR flag
+		I2C_ClearADDRFlag(pI2CHandle->pI2Cx);
 
 		// 2. Read the data until len is zero
 		for(uint32_t i = len; i > 0; i--){
 			// Wait until RXNE is set
+			while(!I2C_GetFlagStatus(pI2CHandle->pI2Cx, I2C_RXNE_FLAG, pI2CHandle->pI2Cx->SR1));
 
 			if(i == 2){
 				// Last 2 bytes remaining:
 				// Disable ACKing
+				I2C_ACKingControl(pI2CHandle->pI2Cx, DISABLE);
 
 				// Generate STOP condition
+				I2C_GenerateSTOPCondition(pI2CHandle->pI2Cx);
 			}
 
 			// Read data register into buffer
+			*pRxBuffer = pI2CHandle->pI2Cx->DR;
 
 			// Increment the buffer address
+			pRxBuffer++;
 		}
 	}
 
-	// re-enable ACKing
+	// re-enable ACKing if configured
+	if(pI2CHandle->I2C_Config.I2C_ACKControl == I2C_ACK_ENABLE)
+		I2C_ACKingControl(pI2CHandle->pI2Cx, ENABLE);
 }
 
 /******************************************************************************
