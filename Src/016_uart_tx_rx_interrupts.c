@@ -123,8 +123,6 @@ int main(void)
 
 		USART_ReceiveDataIT(&usart2_handle, &c, 1);
 
-
-
 	}
 
 	USART_ClockControl(usart2_handle.pUSARTx, DISABLE);
