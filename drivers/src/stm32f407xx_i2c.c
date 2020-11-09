@@ -6,6 +6,7 @@
  */
 
 #include <stm32f407xx_i2c.h>
+#include <stm32f407xx_rcc.h>
 
 static void I2C_MasterHandleRXNEInterrupt(I2C_handle_t *pI2CHandle);
 static void I2C_MasterHandleTXEInterrupt(I2C_handle_t *pI2CHandle);
@@ -224,7 +225,7 @@ uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint8_t flag, uint32_t SR)
  *
  * @brief			- This function enables or disables peripheral clock for the given I2C
  *
- * @param[in]		- I2Cx peripheral
+ * @param[in]		- Base address of the I2C peripheral
  * @param[in]		- ENABLE or DISABLE macros
  *
  * @return			- none
@@ -253,58 +254,6 @@ void I2C_ClockControl(I2C_RegDef_t *pI2Cx, uint8_t status)
 	}
 }
 
-uint32_t RCC_GetPLLOutputClock(void)
-{
-	// TODO
-	return 0;
-}
-
-uint32_t RCC_GetPCLK1Value(void)
-{
-	uint32_t system_clk;
-	uint32_t pclk1;
-	uint8_t clksrc;
-
-	clksrc = ((RCC->CFGR >> 2) & 0x03);
-
-	/* System clock */
-	if(clksrc == 0){
-		// HSI
-		system_clk = HSI_FREQ;
-	}else if(clksrc == 1){
-		// HSE
-		system_clk = HSE_FREQ;
-	}else if(clksrc == 2){
-		// PLL
-		system_clk = RCC_GetPLLOutputClock();
-	}else{
-
-	}
-
-	/* Buses' clocks */
-	// AHB
-	uint32_t AHB_preescaler_bits = ((RCC->CFGR >> 4) & 0x0f);
-	uint8_t AHB_preescaler;
-
-	if(AHB_preescaler_bits < 8){
-		AHB_preescaler = 1;
-	}else{
-		AHB_preescaler = 2^(AHB_preescaler_bits - 8 + 1);
-	}
-
-	// APB1
-	uint32_t APB1_preescaler_bits = ((RCC->CFGR >> 10) & 0x07);
-	uint8_t APB1_preescaler;
-	if(APB1_preescaler_bits < 4){
-		APB1_preescaler = 1;
-	}else{
-		APB1_preescaler = 2^(APB1_preescaler_bits - 4 + 1);
-	}
-
-	pclk1 = (system_clk / AHB_preescaler) / APB1_preescaler;
-
-	return pclk1;
-}
 
 /******************************************************************************
  * @fn 				- I2C_Init
@@ -397,7 +346,7 @@ void I2C_Init(I2C_handle_t *pI2CHandle)
  *
  * @brief			- This function de-initializes the given I2C peripheral
  *
- * @param[in]		- I2Cx handle containing the I2Cx base address
+ * @param[in]		- Base address of the I2C peripheral
  *
  * @return			- none
  *
@@ -693,6 +642,7 @@ void I2C_SlaveCallbackEventsControl(I2C_RegDef_t *pI2Cx, uint8_t status)
 		pI2Cx->CR2 &= ~( 1 << I2C_CR2_ITERREN);
 	}
 }
+
 /******************************************************************************
  * @fn 				- I2C_IRQInterruptConfig
  *

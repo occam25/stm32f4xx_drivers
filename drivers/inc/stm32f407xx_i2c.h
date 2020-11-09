@@ -30,7 +30,7 @@ typedef struct {
 	uint8_t *pRxBuffer;					/* <! To store the app. Rx buffer address >*/
 	uint32_t TxLen; 					/* <! To store the Tx buffer len >*/
 	uint32_t RxLen;						/* <! To store the Rx buffer len >*/
-	uint8_t TxRxState;					/* <! To store the communicacion state >*/
+	uint8_t TxRxState;					/* <! To store the communication state >*/
 	uint8_t DevAddr;					/* <! To store the slave/device address >*/
 	uint32_t RxSize;					/* <! To store Rx size >*/
 	uint8_t Sr;							/* <! To store repeated start value >*/
